@@ -1,6 +1,6 @@
-import { LINEAR_API_KEY, TODOIST_API_KEY, GITLAB_API_KEY, GITLAB_FULL_NAME } from './constants';
+import { TODOIST_API_KEY, GITLAB_API_KEY, GITLAB_FULL_NAME } from './constants';
 import { createSpinner } from 'nanospinner'
-import { LinearClient, Issue } from '@linear/sdk';
+import { Issue } from '@linear/sdk';
 import { Project as GitlabProject, MergeRequest } from 'gitlab-graphql-types';
 import {
   TodoistApi,
@@ -8,8 +8,6 @@ import {
   Task,
   Label,
   AddTaskArgs,
-  AddLabelArgs,
-  GetTasksArgs,
   UpdateTaskArgs,
 } from '@doist/todoist-api-typescript'
 import { getLinearHelper } from './sources/Linear';
