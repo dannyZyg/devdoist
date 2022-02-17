@@ -12,6 +12,7 @@ import {
   GetTasksArgs,
   UpdateTaskArgs,
 } from '@doist/todoist-api-typescript'
+import { getLinearHelper } from './sources/Linear';
 
 export default async (): Promise<void> => {
 
@@ -72,10 +73,9 @@ export default async (): Promise<void> => {
       }
     });
     const responseJson = await response.json();
-    const mergeRequests = responseJson.data?.group?.mergeRequests?.edges;
+    const mergeRequests = responseJson.data?.group?.mergeRequests?.edges ?? [];
     return mergeRequests.map(mergeRequest => mergeRequest?.node);
   };
-
 
   const filterMergeRequestsByName = (mergeRequests, name: string) => {
     return mergeRequests.filter(mergeRequest => {
@@ -102,36 +102,13 @@ export default async (): Promise<void> => {
     return false;
   }
 
-  const getLinearIssues = async (after: string|null = null) => {
-
-    spinner = createSpinner('Fetching Linear Issues..').start()
-    const issues = await me.assignedIssues(
-      {
-        first: 50,
-        after: after,
-        filter: {
-          state: {
-            name: {
-              in: ["In Progress", "Next", "Backlog"],
-            },
-          },
-        },
-      },
-    );
-
-    spinner.success()
-    return issues;
-  };
-
-
-  const linearClient = new LinearClient({ apiKey: LINEAR_API_KEY })
   const todoistClient = new TodoistApi(TODOIST_API_KEY);
 
   let spinner = createSpinner('Fetching Todoist Projects..').start()
   const todoistProjects = await todoistClient.getProjects();
   spinner.success();
 
-  // const ticketCreationFilter: Array<Project> = todoistProjects.filter(p => p.name == "Ticket Creation");
+  const ticketCreationFilter: Array<Project> = todoistProjects.filter(p => p.name == "Ticket Creation");
   const getTodoistProjectByName = (name): Project|null => todoistProjects.filter(p => p.name == name)[0] || null;
 
   const ticketCreationProjectId = getTodoistProjectByName('Ticket Creation')?.id;
@@ -151,10 +128,6 @@ export default async (): Promise<void> => {
 
   spinner = createSpinner('Fetching Todoist Labels..').start()
   const todoistLabels = await todoistClient.getLabels();
-  spinner.success();
-
-  spinner = createSpinner('Fetching Linear User..').start()
-  const me = await linearClient.viewer;
   spinner.success();
 
   const getExistingTask = (name: string, tasks: Array<Task>): Task|null => {
@@ -255,19 +228,9 @@ export default async (): Promise<void> => {
   const myPendingCodeReviews = filterMergeRequestsByName(openMergeRequests, GITLAB_FULL_NAME);
   spinner.success();
 
-  let hasMoreIssues = true;
-  let issuesEndCursor = null;
+  const linearHelper = getLinearHelper();
+  linearHelper.init();
 
-  while (hasMoreIssues) {
-    const linearIssues = await getLinearIssues(issuesEndCursor);
-
-    issuesEndCursor = linearIssues.pageInfo.endCursor;
-    hasMoreIssues = linearIssues.pageInfo.hasNextPage;
-
-    if (linearIssues.nodes.length > 0) {
-      syncLinearIssuesWithTodoist(linearIssues.nodes);
-    }
-  }
-
+  syncLinearIssuesWithTodoist(linearHelper.issues);
   syncGitlabMergeRequestsWithTodoist(myPendingCodeReviews);
 };
