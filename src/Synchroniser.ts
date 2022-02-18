@@ -1,12 +1,8 @@
-import { TODOIST_API_KEY, GITLAB_USERNAME } from './Environment';
-import { createSpinner } from 'nanospinner'
+import { GITLAB_USERNAME } from './Environment';
 import { MergeRequest } from 'gitlab-graphql-types';
 import { Issue, LinearClient } from '@linear/sdk';
 import {
   TodoistApi,
-  Project,
-  Task,
-  Label,
   AddTaskArgs,
   UpdateTaskArgs,
 } from '@doist/todoist-api-typescript'
@@ -128,7 +124,7 @@ export default class Synchroniser {
 
       } else {
         //TODO
-        console.log(`🗑 Deleting task: ${name} (TODO)`);
+        // console.log(`🗑 Deleting task: ${name} (TODO)`);
       }
     });
   };

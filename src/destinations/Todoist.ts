@@ -3,16 +3,13 @@ import {
   TODOIST_CODE_REVIEW_PROJECT_NAME,
   TODOIST_LINEAR_ISSUES_PROJECT_NAME,
 } from '../Environment';
-import { createSpinner, Spinner } from 'nanospinner'
-import { MergeRequest } from 'gitlab-graphql-types';
+import { createSpinner } from 'nanospinner'
 import { Issue } from '@linear/sdk';
 import {
   TodoistApi,
   Project,
   Task,
   Label,
-  AddTaskArgs,
-  UpdateTaskArgs,
 } from '@doist/todoist-api-typescript'
 
 export class TodoistHelper {
