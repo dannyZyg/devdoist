@@ -20,11 +20,9 @@ sea of mail in your inbox and you just need the important details.
 
 You'll need the following API Keys:
 
-```
-LINEAR_API_KEY
-GITLAB_API_KEY
-TODOIST_API_KEY
-```
+- `LINEAR_API_KEY`
+- `GITLAB_API_KEY`
+- `TODOIST_API_KEY`
 
 ## Overview
 
@@ -45,8 +43,8 @@ Currently, this tool provides somewhat hardcoded functionality with some custom 
 
 #### Customise the Todoist destination projects
 
-	- `TODOIST_LINEAR_ISSUES_PROJECT_NAME`: The project name where you want development tasks to go
-	- `TODOIST_CODE_REVIEW_PROJECT_NAME`: The project name where you want pending code reviews to go
+- `TODOIST_LINEAR_ISSUES_PROJECT_NAME`: The project name where you want development tasks to go
+- `TODOIST_CODE_REVIEW_PROJECT_NAME`: The project name where you want pending code reviews to go
 
 ## Supported Sources
 
