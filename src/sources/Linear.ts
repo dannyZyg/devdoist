@@ -18,29 +18,36 @@ class LinearHelper {
     this.me = await this.getMe();
     this.spinner.success();
 
+    this.spinner = createSpinner('Fetching Linear Issues..').start()
+    this.issues = await this.getAllLinearIssues();
+    this.spinner.success();
+  };
+
+  getAllLinearIssues = async (): Promise<Array<Issue>> => {
     let hasMoreIssues = true;
     let issuesEndCursor = null;
+    let tempIssues: Array<Issue> = [];
 
     while (hasMoreIssues) {
-      const issueConnection: IssueConnection = await this.getLinearIssues(issuesEndCursor);
+      const issueConnection: IssueConnection = await this.getLinearIssuesSet(issuesEndCursor);
 
       if (issueConnection.nodes.length > 0) {
-        this.issues = [...this.issues, ...issueConnection.nodes];
+        tempIssues = [...tempIssues, ...issueConnection.nodes];
       }
 
       issuesEndCursor = issueConnection.pageInfo.endCursor;
       hasMoreIssues = issueConnection.pageInfo.hasNextPage;
     }
+
+    return tempIssues;
   };
 
   getMe = async () => {
     return await this.linearClient.viewer;
   };
 
-  getLinearIssues = async (after: string|null = null) => {
-
-    this.spinner = createSpinner('Fetching Linear Issues..').start()
-    const issues = await this.me.assignedIssues(
+  getLinearIssuesSet = async (after: string|null = null) => {
+    return await this.me.assignedIssues(
       {
         first: 50,
         after: after,
@@ -53,9 +60,6 @@ class LinearHelper {
         },
       },
     );
-
-    this.spinner.success()
-    return issues;
   };
 }
 

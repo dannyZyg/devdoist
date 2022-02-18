@@ -197,7 +197,7 @@ export default async (): Promise<void> => {
 
       if (!existingTask && !isApprovedByMe) {
 
-        console.log(`📥  Adding Code Review: ${name}`);
+        console.log(`📥 Adding Code Review: ${name}`);
         const args: AddTaskArgs = {
           content: name,
           description: mergeRequest.webUrl,
@@ -221,13 +221,14 @@ export default async (): Promise<void> => {
     });
   };
 
+  const linearHelper = getLinearHelper();
+  await linearHelper.init();
+
   spinner = createSpinner('Fetching Gitlab Merge Requests...').start()
   const openMergeRequests = await getGitlabMergeRequests();
   const myPendingCodeReviews = filterMergeRequestsByName(openMergeRequests, GITLAB_FULL_NAME);
   spinner.success();
 
-  const linearHelper = getLinearHelper();
-  linearHelper.init();
 
   syncLinearIssuesWithTodoist(linearHelper.issues);
   syncGitlabMergeRequestsWithTodoist(myPendingCodeReviews);
