@@ -2,7 +2,7 @@ import {
   TODOIST_API_KEY,
   TODOIST_CODE_REVIEW_PROJECT_NAME,
   TODOIST_LINEAR_ISSUES_PROJECT_NAME,
-} from '../Constants';
+} from '../Environment';
 import { createSpinner, Spinner } from 'nanospinner'
 import { MergeRequest } from 'gitlab-graphql-types';
 import { Issue } from '@linear/sdk';

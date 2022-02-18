@@ -1,4 +1,4 @@
-import { TODOIST_API_KEY, GITLAB_USERNAME } from './Constants';
+import { TODOIST_API_KEY, GITLAB_USERNAME } from './Environment';
 import { createSpinner } from 'nanospinner'
 import { MergeRequest } from 'gitlab-graphql-types';
 import { Issue, LinearClient } from '@linear/sdk';
