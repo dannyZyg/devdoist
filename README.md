@@ -10,9 +10,9 @@ sea of mail in your inbox and you just need the important details.
 
 ##### By keeping these tasks in Todoist you can:
 
-- Avoid checking email for updates on pending code reviews.
+- Avoid checking email for updates, or worse, using your email as a TODO list.
 - At a glance, easily see merge requests waiting for your review, across multiple repos.
-- Split up your development tasks from Linear with your own personal notes, all under 1 parent task.
+- Split up your development tasks from Linear into subtasks with your own personal notes, all under 1 parent task.
 - Use Todist calendar notation to schedule time for tasks on google calendar `wed 9am [30m]`
 - Tick things off and manage your time in one place.
 
