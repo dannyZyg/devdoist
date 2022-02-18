@@ -1,3 +1,3 @@
-import runTransfer from './task'
+import runTransfer from './TaskRunner'
 
 runTransfer();

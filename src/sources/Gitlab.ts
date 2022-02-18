@@ -1,4 +1,4 @@
-import { GITLAB_API_KEY, GITLAB_USERNAME, GITLAB_GROUP_NAME } from '../constants';
+import { GITLAB_API_KEY, GITLAB_USERNAME, GITLAB_GROUP_NAME } from '../Constants';
 import { createSpinner, Spinner } from 'nanospinner'
 import { MergeRequest } from 'gitlab-graphql-types';
 

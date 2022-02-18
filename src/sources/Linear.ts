@@ -1,8 +1,8 @@
-import { LINEAR_API_KEY } from '../constants';
+import { LINEAR_API_KEY } from '../Constants';
 import { createSpinner, Spinner } from 'nanospinner'
 import { LinearClient, Issue, IssueConnection, User } from '@linear/sdk';
 
-class LinearHelper {
+export class LinearHelper {
 
   linearClient: LinearClient;
   spinner: Spinner;
