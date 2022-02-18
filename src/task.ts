@@ -1,7 +1,7 @@
-import { TODOIST_API_KEY, GITLAB_API_KEY, GITLAB_FULL_NAME } from './constants';
+import { TODOIST_API_KEY, GITLAB_USERNAME } from './constants';
 import { createSpinner } from 'nanospinner'
+import { MergeRequest } from 'gitlab-graphql-types';
 import { Issue } from '@linear/sdk';
-import { Project as GitlabProject, MergeRequest } from 'gitlab-graphql-types';
 import {
   TodoistApi,
   Project,
@@ -11,94 +11,9 @@ import {
   UpdateTaskArgs,
 } from '@doist/todoist-api-typescript'
 import { getLinearHelper } from './sources/Linear';
+import { getGitlabHelper, GitlabHelper } from './sources/Gitlab';
 
 export default async (): Promise<void> => {
-
-  const getGitlabMergeRequests = async () => {
-    const groupName = 'goodpairdays';
-    const body = {
-      query: `
-        query allGroupMergeRequests {
-          group (fullPath: "${groupName}") {
-            name
-            mergeRequests (state: opened, draft: false) {
-              edges {
-                node {
-                  title
-                  webUrl
-                  author {
-                    name
-                  }
-                  labels {
-                    edges {
-                      node {
-                        title
-                      }
-                    }
-                  }
-                  project {
-                    name
-                  }
-                  reviewers {
-                    edges {
-                      node {
-                        name
-                        username
-                      }
-                    }
-                  }
-                  approvedBy {
-                    edges {
-                      node {
-                        name
-                        username
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      `,
-    };
-    const response = await fetch('https://gitlab.com/api/graphql', {
-      method: 'post',
-      body: JSON.stringify(body),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GITLAB_API_KEY}`,
-      }
-    });
-    const responseJson = await response.json();
-    const mergeRequests = responseJson.data?.group?.mergeRequests?.edges ?? [];
-    return mergeRequests.map(mergeRequest => mergeRequest?.node);
-  };
-
-  const filterMergeRequestsByName = (mergeRequests, name: string) => {
-    return mergeRequests.filter(mergeRequest => {
-      const reviewers = mergeRequest?.reviewers?.edges;
-      let isReviewerMe = false;
-
-      for (const reviewer of reviewers) {
-        if (reviewer?.node?.name === name) {
-          isReviewerMe = true;
-        }
-      }
-      return isReviewerMe ? mergeRequest : null;
-    });
-  }
-
-  const isMergeRequestApprovedBy = (mergeRequest, name: string) => {
-    const approvers = mergeRequest?.approvedBy?.edges ?? [];
-
-    for (const approver of approvers) {
-      if (approver?.node?.name === name) {
-        return true;
-      }
-    }
-    return false;
-  }
 
   const todoistClient = new TodoistApi(TODOIST_API_KEY);
 
@@ -188,10 +103,13 @@ export default async (): Promise<void> => {
     });
   };
 
-  const syncGitlabMergeRequestsWithTodoist = (mergeRequests: Array<MergeRequest>) => {
+  const syncGitlabMergeRequestsWithTodoist = (gitlabHelper: GitlabHelper) => {
+
+    const mergeRequests = gitlabHelper.mergeRequestsToReview;
+
     mergeRequests.map(async (mergeRequest: MergeRequest) => {
 
-      const isApprovedByMe = isMergeRequestApprovedBy(mergeRequest, GITLAB_FULL_NAME);
+      const isApprovedByMe = gitlabHelper.isMergeRequestApprovedBy(mergeRequest, GITLAB_USERNAME);
       const name = `CR: ${mergeRequest.title}`;
       const existingTask = getExistingTask(name, codeReviewTasks);
 
@@ -224,12 +142,9 @@ export default async (): Promise<void> => {
   const linearHelper = getLinearHelper();
   await linearHelper.init();
 
-  spinner = createSpinner('Fetching Gitlab Merge Requests...').start()
-  const openMergeRequests = await getGitlabMergeRequests();
-  const myPendingCodeReviews = filterMergeRequestsByName(openMergeRequests, GITLAB_FULL_NAME);
-  spinner.success();
-
+  const gitlabHelper = getGitlabHelper();
+  await gitlabHelper.init();
 
   syncLinearIssuesWithTodoist(linearHelper.issues);
-  syncGitlabMergeRequestsWithTodoist(myPendingCodeReviews);
+  syncGitlabMergeRequestsWithTodoist(gitlabHelper);
 };
