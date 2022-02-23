@@ -51,22 +51,23 @@ export default class Synchroniser {
     const reviewsProject = this.todoistHelper.getTodoistProjectByName(reviewsProjectName, todoistProjects);
 
     if (reviewsProject && reviewsProject.id) {
-      this.syncGitlabMergeRequestsWithTodoist(this.gitlabHelper, reviewsProject.id);
+      this.syncGitlabOpenMergeRequestsWithTodoist(this.gitlabHelper, reviewsProject.id);
+      this.syncGitlabMergedMergeRequestsWithTodoist(this.gitlabHelper);
     }
   };
 
   syncLinearIssuesWithTodoist = (issues: Array<Issue>, todoistProjectId: number) => {
+
+    const todoistClient = this.todoistClient;
+    const linearIssuesTasksInTodoist = this.todoistHelper.todoistTasksLinearIssues;
 
     issues.map(async issue => {
 
       // const labelIds = await getOrCreateLabels(issue);
 
       const name = `[${issue.identifier}] ${issue.title}`;
-      const todoistClient = this.todoistClient;
-
-      const linearIssuesTasksInTodoist = this.todoistHelper.todoistTasksLinearIssues;
-
       const existingTask = this.todoistHelper.getExistingTask(name, linearIssuesTasksInTodoist);
+
       if (!existingTask) {
 
         console.log(`📝  Adding issue: ${name}`);
@@ -90,17 +91,16 @@ export default class Synchroniser {
 
   };
 
-  syncGitlabMergeRequestsWithTodoist = (gitlabHelper: GitlabHelper, todoistProjectId: number) => {
+  syncGitlabOpenMergeRequestsWithTodoist = (gitlabHelper: GitlabHelper, todoistProjectId: number) => {
 
     const mergeRequests = gitlabHelper.mergeRequestsToReview;
     const todoistClient = this.todoistClient;
+    const codeReviewTasksInTodoist = this.todoistHelper.todoistTasksCodeReviews;
 
     mergeRequests.map(async (mergeRequest: MergeRequest) => {
 
       const isApprovedByMe = gitlabHelper.isMergeRequestApprovedBy(mergeRequest, GITLAB_USERNAME);
       const name = `CR: ${mergeRequest.title}`;
-
-      const codeReviewTasksInTodoist = this.todoistHelper.todoistTasksCodeReviews;
       const existingTask = this.todoistHelper.getExistingTask(name, codeReviewTasksInTodoist);
 
       if (!existingTask && !isApprovedByMe) {
@@ -112,7 +112,6 @@ export default class Synchroniser {
           projectId: todoistProjectId,
         };
         todoistClient.addTask(args);
-
       } else if (existingTask && !isApprovedByMe) {
 
         console.log(`♻️  Updating task: ${name}`);
@@ -122,9 +121,28 @@ export default class Synchroniser {
         };
         todoistClient.updateTask(existingTask.id, args);
 
-      } else {
-        //TODO
-        // console.log(`🗑 Deleting task: ${name} (TODO)`);
+      } else if (existingTask && isApprovedByMe) {
+
+        console.log(`⛳️  Marking task completed: ${name} (TODO)`);
+        todoistClient.closeTask(existingTask.id);
+      }
+    });
+  };
+
+  syncGitlabMergedMergeRequestsWithTodoist = (gitlabHelper: GitlabHelper) => {
+
+    const mergeRequests = gitlabHelper.mergeRequestsReviewed;
+    const todoistClient = this.todoistClient;
+    const codeReviewTasksInTodoist = this.todoistHelper.todoistTasksCodeReviews;
+
+    mergeRequests.map(async (mergeRequest: MergeRequest) => {
+
+      const name = `CR: ${mergeRequest.title}`;
+      const existingTask = this.todoistHelper.getExistingTask(name, codeReviewTasksInTodoist);
+
+      if (existingTask) {
+        console.log(`⛳️  Marking task completed: ${name} (TODO)`);
+        todoistClient.closeTask(existingTask.id);
       }
     });
   };

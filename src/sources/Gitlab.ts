@@ -2,12 +2,18 @@ import { GITLAB_API_KEY, GITLAB_USERNAME, GITLAB_GROUP_NAME } from '../Environme
 import { createSpinner, Spinner } from 'nanospinner'
 import { MergeRequest } from 'gitlab-graphql-types';
 
+interface MergeRequestArgs {
+  groupName: string;
+  state: 'opened'|'merged'|'closed';
+}
+
 export class GitlabHelper {
 
   groupName: string;
   username: string;
   spinner: Spinner;
   mergeRequestsToReview: Array<MergeRequest>
+  mergeRequestsReviewed: Array<MergeRequest>
 
   constructor() {
     this.groupName = GITLAB_GROUP_NAME;
@@ -16,22 +22,24 @@ export class GitlabHelper {
 
   init = async () => {
     this.spinner = createSpinner('Fetching Gitlab Merge Requests...').start()
-    const openMergeRequests = await this.getGitlabMergeRequestsByGroup(this.groupName);
+    const openMergeRequests = await this.getGitlabMergeRequestsByGroup({groupName: this.groupName, state: 'opened'});
+    const mergedMergeRequests = await this.getGitlabMergeRequestsByGroup({groupName: this.groupName, state: 'merged'});
     this.spinner.success();
 
     this.spinner = createSpinner('Filtering Gitlab Merge Requests requiring review from me...').start()
     this.mergeRequestsToReview = this.filterMergeRequestsByReviewerUsername(openMergeRequests, GITLAB_USERNAME);
+    this.mergeRequestsReviewed = this.filterMergeRequestsByReviewerUsername(mergedMergeRequests, GITLAB_USERNAME);
     this.spinner.success();
   };
 
-  getGitlabMergeRequestsByGroup = async (groupName: string) => {
+  getGitlabMergeRequestsByGroup = async ({groupName, state}: MergeRequestArgs) => {
 
     const body = {
       query: `
         query allGroupMergeRequests {
           group (fullPath: "${groupName}") {
             name
-            mergeRequests (state: opened, draft: false) {
+            mergeRequests (state: ${state}, draft: false) {
               edges {
                 node {
                   title
