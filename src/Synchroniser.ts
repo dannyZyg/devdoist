@@ -141,7 +141,7 @@ export default class Synchroniser {
       const existingTask = this.todoistHelper.getExistingTask(name, codeReviewTasksInTodoist);
 
       if (existingTask) {
-        console.log(`⛳️  Marking task completed: ${name} (TODO)`);
+        console.log(`⛳️  Marking task completed: ${name}`);
         todoistClient.closeTask(existingTask.id);
       }
     });
